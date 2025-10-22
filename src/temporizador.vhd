@@ -14,8 +14,7 @@ entity temporizador is
         Z : out std_logic;
         T : out std_logic);
     end temporizador;
--------------------------------------------------------
-
+-------------------------------------------------------------------
 --logica del temporizador (que hace el temporizador)
 
 architecture arch of temporizador is
