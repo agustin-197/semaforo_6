@@ -2,40 +2,41 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+-------------------------------------------------------
+--asignacion de las entradas y salidas
 entity temporizador is
+    generic (N : integer);
     port(
-        recarga:in std_logic_vector (5 downto 0);
-        clk, nrst:in std_logic;
-        listo: out std_logic;
-        hab: in std_logic
-    );
-end temporizador;
+        clk : in std_logic;
+        hab : in std_logic;
+        reset : in std_logic;
+        P : in std_logic_vector (5 downto 0);
+        Z : out std_logic;
+        T : out std_logic);
+    end temporizador;
+-------------------------------------------------------
 
-architecture impl of temporizador is
-    signal est_actual, est_sig , est_sig1: unsigned(5 downto 0);
+--logica del temporizador (que hace el temporizador)
+
+architecture arch of temporizador is
+   signal D, D_sig : unsigned (5 downto 0);
 begin
-    
-    registro: process(clk)
+
+--------------------------------------------
+    --proceso detecta si hay flanco ascendente
+    memori: process(clk)
     begin
         if rising_edge(clk) then
-            est_act<= est_sig;
+            D <= D_sig;
         end if;
     end process;
-    --datapath
-    listo<= '1' when est_act = 1 else
-            '0';
-    --"una forma"  est_sig <= (others =>'0') when not rst
-    est_sig <= est_act when not hab else
-            (others=>0) when not nrst else
-            unsigned(recarga) when est_act = 0 else           
-            est_act -1;
-            
-    
-        est_sig1 when hab else
-        est_act;
-        est_sig1 <= recarga when est_act = "000000" else
-                    std_logic_vector(unsigned(est_act) - 1);
 
-end impl;
+    D_sig <= (others=>'0') when reset else
+             D when not hab else
+             unsigned(P) when Z else
+             D - 1;
+    Z <= D ?= 0;
+    T <= D ?= 1;
 
-        end arch;
+   end arch;
+

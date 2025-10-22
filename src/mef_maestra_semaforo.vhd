@@ -15,18 +15,17 @@ end entity mef_maestra_semaforo;
 
 architecture impl of mef_maestra_semaforo is
 constant S_INICIO std_logic_vector(2 downto 0) := "000";
-constant S_CV_EO std_logic_vector(2 downto 0) := "000";
-constant S_T_EONS std_logic_vector(2 downto 0) := "000";
-constant S std_logic_vector(2 downto 0) := "000";
-constant variables... std_logic_vector(2 downto 0) := "000";
-constant variables... std_logic_vector(2 downto 0) := "000";
-constant variables... std_logic_vector(2 downto 0) := "000";
-constant variables... std_logic_vector(2 downto 0) := "000";
-constant variables... std_logic_vector(2 downto 0) := "000";    
-constant variables... std_logic_vector(2 downto 0) := "000";
-constant variables... std_logic_vector(2 downto 0) := "000";
-constant variables... std_logic_vector(2 downto 0) := "000";
-constant T_50S std_logic_vector(2 downto 0) := "000";
+constant S_CV_EO std_logic_vector(2 downto 0) := "001";
+constant S_T_EONS std_logic_vector(2 downto 0) := "010";
+constant S_CVA_EO std_logic_vector(2 downto 0) := "011";
+constant S_CV_NS std_logic_vector(2 downto 0) := "100";
+constant S_T_NSEO std_logic_vector(2 downto 0) := "101";
+constant S_CVA_NS std_logic_vector(2 downto 0) := "110";
+constant L_ROJO std_logic_vector(2 downto 0) := "001";
+constant L_AMARILLO std_logic_vector(2 downto 0) := "010";    
+constant L_VERDE std_logic_vector(2 downto 0) := "100";
+constant T_10S std_logic_vector(TWIDTH-1 downto 0) := "00001010";
+constant T_50S std_logic_vector(TWIDTH-1 downto 0) := "00110010";
 
 signal est_act, est_sig, est_sig1: std_logic_vector(2 downto 0);
 signal peo_k, pns_k, peo_act, pns_act: std_logic;
