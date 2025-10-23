@@ -44,8 +44,7 @@ AMARILLO_B, --calle A verde
 EMERGENCIA_A_T, --transicion verde A a amarillo A para dar lugar emergencia B (verde calle B) 
 EMERGENCIA_B_T, --transicion verde B a amarillo B para dar lugar emergencia A (verde calle A)
 EMERGENCIA_A_M, --mantiene A en verde
-EMERGENCIA_B_M, --mantiene B en verde
-
+EMERGENCIA_B_M --mantiene B en verde
 );
 
 signal estado_actual, estado_siguiente: estado_t;
@@ -55,6 +54,7 @@ signal timer_t_out: std_logic; --señal generada por temporizador al final de la
 --Señales para almacenar el estado de las solicitudes peatonales
 signal m_peaton_a, m_peaton_b: std_logic := '0';--guarda el pulsador peaton
 signal peaton_a_det, peaton_b_det: std_logic := '0'; --detecta el pulsador peaton
+
 
 process (clk) is
 begin
@@ -90,7 +90,7 @@ process (clk, nreset) is
     elsif rising_edge(clk) then
         estado_actual <= estado_siguiente;
         end if;
-end process
+    end process;
 --Logica de transicion-----------------------------------------
 --PRIORIDADES: 1° emergencia, 2°peaton, 3° transicion normal (autos)
 
@@ -148,7 +148,7 @@ begin
                 if m_peaton_b = '1' then
                     carga_timer <= T_PEATON;
                 else
-                    carga_timer <= T_VERDE
+                    carga_timer <= T_VERDE;
                 end if ;
                                 
             end if ;
