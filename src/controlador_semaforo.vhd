@@ -39,7 +39,7 @@ type estado_t is(
 VERDE_A, --calle A verde
 AMARILLO_A, -- calle a amarillo
 VERDE_B, --calle B verde
-AMARILLO_B, --calle A verde
+AMARILLO_B, --calle A amarillo
 EMERGENCIA_A_T, --transicion verde A a amarillo A para dar lugar emergencia B (verde calle B) 
 EMERGENCIA_B_T, --transicion verde B a amarillo B para dar lugar emergencia A (verde calle A)
 EMERGENCIA_A_M, --mantiene A en verde
@@ -53,9 +53,6 @@ signal timer_t_out: std_logic; --señal generada por temporizador al final de la
 --Señales para almacenar las solicitudes peatonales
 signal m_peaton_a, m_peaton_b: std_logic := '0';--guarda el pulsador peaton
 signal peaton_a_det, peaton_b_det: std_logic := '0'; --detecta el pulsador peaton
-begin
-
-process (clk) is
 begin
 
 --TEMPORIZADOR-------------------------------------------------
@@ -73,7 +70,18 @@ U_TIMER: entity work.temporizador
     );
 ---------------------------------------------------------------
 
-    if rising_edge(clk) then
+process (clk, nreset) is
+begin
+
+--limpia memoria cuando confirma
+if nreset = '0' then
+  m_peaton_a  <= '0';
+  m_peaton_b  <= '0';
+  peaton_a_det <= '0';
+  peaton_b_det <= '0';
+
+
+elsif rising_edge(clk) then
         --peaton a
         if solicitud_peaton_a='1' and peaton_a_det='0' then
             m_peaton_a <= '1';
@@ -110,7 +118,7 @@ process (clk, nreset) is
 --PRIORIDADES: 1° emergencia, 2°peaton, 3° transicion normal (autos)
 
 --proceso para determinar el estado siguiente y el tiempo de cuenta
-process(estado_actual, timer_t_out, solicitud_emergencia_a, solicitud_emergencia_b, m_peaton_a, mpeaton_b) is
+process(estado_actual, timer_t_out, solicitud_emergencia_a, solicitud_emergencia_b, m_peaton_a, m_peaton_b) is
 begin
     estado_siguiente <= estado_actual; --se queda en el mismo estado
     carga_timer <= T_VERDE; --Asigno tiempo verde
@@ -227,6 +235,8 @@ begin
     peaton_b <= '0'; --apagado
     confirmacion_emergencia_a <= '0';
     confirmacion_emergencia_b <= '0';
+    confirmacion_peaton_a <= '0';
+    confirmacion_peaton_b <= '0';
 
     case estado_actual is
     

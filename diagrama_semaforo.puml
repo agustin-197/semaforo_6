@@ -1,0 +1,44 @@
+@startuml
+title Controlador de Semáforo con Detector de Emergencia y Peatones
+
+hide empty description
+skinparam state {
+  BackgroundColor #eef7ff
+  BorderColor #22577A
+  StartColor #38A3A5
+}
+
+[*] --> VERDE_A : nreset='0'
+
+state VERDE_A
+state AMARILLO_A
+state VERDE_B
+state AMARILLO_B
+state EMERGENCIA_A_T
+state EMERGENCIA_B_T
+state EMERGENCIA_A_M
+state EMERGENCIA_B_M
+
+' -------- Región A --------
+VERDE_A --> EMERGENCIA_A_T : solicitud_emergencia_b='1' && m_peaton_a='0'
+VERDE_A --> AMARILLO_A     : timer_t_out='1'
+VERDE_A --> VERDE_A        : m_peaton_a='1' / T := T_PEATON
+
+AMARILLO_A --> EMERGENCIA_B_M : timer_t_out='1' && solicitud_emergencia_b='1'
+AMARILLO_A --> VERDE_B        : timer_t_out='1' && solicitud_emergencia_b='0'
+
+EMERGENCIA_A_T --> EMERGENCIA_B_M : timer_t_out='1'
+EMERGENCIA_A_M --> AMARILLO_A     : solicitud_emergencia_a='0'
+
+' -------- Región B --------
+VERDE_B --> EMERGENCIA_B_T : solicitud_emergencia_a='1' && m_peaton_b='0'
+VERDE_B --> AMARILLO_B     : timer_t_out='1'
+VERDE_B --> VERDE_B        : m_peaton_b='1' / T := T_PEATON
+
+AMARILLO_B --> EMERGENCIA_A_M : timer_t_out='1' && solicitud_emergencia_a='1'
+AMARILLO_B --> VERDE_A        : timer_t_out='1' && solicitud_emergencia_a='0'
+
+EMERGENCIA_B_T --> EMERGENCIA_A_M : timer_t_out='1'
+EMERGENCIA_B_M --> AMARILLO_B     : solicitud_emergencia_b='0'
+
+@enduml
