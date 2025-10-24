@@ -4,12 +4,12 @@ use ieee.numeric_std.all;
 
 entity controlador_semaforo is
     generic (
-        constant N_PRE      : integer; --Ancho de bits del prescaler (divisor de frecuencia).
-        constant C_PRE      : unsigned(N_PRE-1 downto 0); --Valor de cuenta del prescaler (carga).
-        constant N_TIMER    : integer; --Ancho de bits del contador principal (timer).
-        constant T_VERDE    : integer; --Tiempo luz verde
-        constant T_AMARILLO : integer; --Tiempo luz amarillo
-        constant T_PEATON   : integer); --Tiempo de cruce peaton
+        N_PRE      : integer; --Ancho de bits del prescaler (divisor de frecuencia).
+        C_PRE      : unsigned(N_PRE-1 downto 0); --Valor de cuenta del prescaler (carga).
+        N_TIMER    : integer; --Ancho de bits del contador principal (timer).
+        T_VERDE    : integer; --Tiempo luz verde
+        T_AMARILLO : integer; --Tiempo luz amarillo
+        T_PEATON   : integer); --Tiempo de cruce peaton
     port (
         clk : in std_logic;
         nreset : in std_logic;
