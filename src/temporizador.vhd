@@ -23,7 +23,7 @@ begin
 
 --------------------------------------------
     --proceso detecta si hay flanco ascendente
-    memori: process(clk)
+    memoria: process(clk)
     begin
         if rising_edge(clk) then
             D <= D_sig;

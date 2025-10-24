@@ -34,7 +34,6 @@ entity controlador_semaforo is
 end controlador_semaforo;
 
 architecture arch of controlador_semaforo is
-begin
 
 type estado_t is(
 VERDE_A, --calle A verde
@@ -51,13 +50,29 @@ signal estado_actual, estado_siguiente: estado_t;
 signal carga_timer: integer; --cuenta que se carga en el temporizador
 signal timer_t_out: std_logic; --señal generada por temporizador al final de la cuenta
 
---Señales para almacenar el estado de las solicitudes peatonales
+--Señales para almacenar las solicitudes peatonales
 signal m_peaton_a, m_peaton_b: std_logic := '0';--guarda el pulsador peaton
 signal peaton_a_det, peaton_b_det: std_logic := '0'; --detecta el pulsador peaton
-
+begin
 
 process (clk) is
 begin
+
+--TEMPORIZADOR-------------------------------------------------
+U_TIMER: entity work.temporizador
+    generic map(
+      N => 6  
+    )
+    port map(
+      clk   => clk,
+      hab   => '1',
+      reset => not nreset,  --reset es activo en '0'
+      P     => std_logic_vector(to_unsigned(carga_timer, 6)),
+      Z     => timer_t_out,
+      T     => open --T no se usa, queda abierta
+    );
+---------------------------------------------------------------
+
     if rising_edge(clk) then
         --peaton a
         if solicitud_peaton_a='1' and peaton_a_det='0' then
@@ -95,7 +110,7 @@ process (clk, nreset) is
 --PRIORIDADES: 1° emergencia, 2°peaton, 3° transicion normal (autos)
 
 --proceso para determinar el estado siguiente y el tiempo de cuenta
-process(estado_actual, timer_timeout, solicitud_emergencia_a, solicitud_emergencia_b, peaton_a_m, peaton_b_m) is
+process(estado_actual, timer_t_out, solicitud_emergencia_a, solicitud_emergencia_b, m_peaton_a, mpeaton_b) is
 begin
     estado_siguiente <= estado_actual; --se queda en el mismo estado
     carga_timer <= T_VERDE; --Asigno tiempo verde
@@ -107,7 +122,7 @@ begin
             --si hay emergencia en b y no hay solicitud peaton a, transicion inmediata
             if solicitud_emergencia_b = '1' and m_peaton_a ='0' then
                 estado_siguiente <= EMERGENCIA_A_T; --transiciona a B
-            elsif timer_t_out then
+            elsif timer_t_out='1' then
                 estado_siguiente <= AMARILLO_A;
                 carga_timer <= T_AMARILLO;
             else
@@ -129,7 +144,7 @@ begin
                 carga_timer <= 0;
                 
                 else
-                    estado_siguiente <= VERDE_B
+                    estado_siguiente <= VERDE_B;
                     carga_timer <= T_VERDE;
                 end if;
             end if ; 
@@ -161,7 +176,7 @@ begin
                     estado_siguiente <= EMERGENCIA_A_M;
                     carga_timer <= 0;
                     else
-                        estado_siguiente <= VERDE_A
+                        estado_siguiente <= VERDE_A;
                         carga_timer <= T_VERDE;
                                         
                 end if ;    
@@ -182,7 +197,7 @@ begin
                 carga_timer <= T_AMARILLO;
             end if ;
 
-        when EMERGENCIA_B_T => --calle A esta verde, se le fuerza amarillo
+        when EMERGENCIA_A_T => --calle A esta verde, se le fuerza amarillo
             carga_timer <= T_AMARILLO;
             if timer_t_out = '1' then
                 estado_siguiente <= EMERGENCIA_B_M;
@@ -203,7 +218,7 @@ begin
 -- Verde = "00", Amarillo = "01" , Rojo = "10"
 
 process(estado_actual, solicitud_emergencia_a, solicitud_emergencia_b, m_peaton_a, m_peaton_b) is
-    begin
+begin
 
         --resetear todas las salidas a un valor seguro
     transito_a <= "10"; --rojo
@@ -229,6 +244,7 @@ process(estado_actual, solicitud_emergencia_a, solicitud_emergencia_b, m_peaton_
         when VERDE_B =>
             transito_b <= "00";--verde
             transito_a <= "10";--rojo
+            confirmacion_peaton_b <= m_peaton_b;--confirma que esta modo peaton
             peaton_a <= '1';
 
         when AMARILLO_B =>
@@ -237,8 +253,8 @@ process(estado_actual, solicitud_emergencia_a, solicitud_emergencia_b, m_peaton_
             peaton_a <= '1';
 
         when EMERGENCIA_A_T =>
-            transito_a <= "10"--rojo
-            transito_b <= "01"--amarillo(forzado)
+            transito_a <= "10";--rojo
+            transito_b <= "01";--amarillo(forzado)
 
         when EMERGENCIA_A_M =>
             transito_a <= "00";--verde (hasta que termine emergencia)
@@ -246,8 +262,8 @@ process(estado_actual, solicitud_emergencia_a, solicitud_emergencia_b, m_peaton_
             confirmacion_emergencia_a <= '1'; 
 
         when EMERGENCIA_B_T =>
-             transito_b <= "10"--rojo
-            transito_a <= "01"--amarillo(forzado)
+             transito_b <= "10";--rojo
+            transito_a <= "01";--amarillo(forzado)
 
         when EMERGENCIA_B_M =>
             transito_b <= "00";--verde (hasta que termine emergencia)
