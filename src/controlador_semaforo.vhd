@@ -217,11 +217,10 @@ begin
             if solicitud_emergencia_b = '0' then
                 estado_siguiente <= AMARILLO_B;
                 carga_timer <= T_AMARILLO;
-            end if ;
-
-        ------------------      
+            end if ;      
     end case ;
-
+end process;
+----------------------------------------------
 -- Logica de salida (luces y confirmaciones)
 -- Verde = "00", Amarillo = "01" , Rojo = "10"
 
