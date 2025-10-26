@@ -49,22 +49,35 @@ EMERGENCIA_B_M --mantiene B en verde
 signal estado_actual, estado_siguiente: estado_t;
 signal carga_timer: integer; --cuenta que se carga en el temporizador
 signal timer_t_out: std_logic; --señal generada por temporizador al final de la cuenta
+signal hab_timer : std_logic;
 
 --Señales para almacenar las solicitudes peatonales
 signal m_peaton_a, m_peaton_b: std_logic := '0';--guarda el pulsador peaton
 signal peaton_a_det, peaton_b_det: std_logic := '0'; --detecta el pulsador peaton
 begin
 
+--PRESCALER----------------------------------------------------
+U_PRESCALER: entity work.prescaler
+    generic map (
+        N => N_PRE
+    )
+    port map (
+        nreset  => nreset,
+        clk     => clk,
+        preload => std_logic_vector(C_PRE), 
+        tc      => hab_timer
+    );
+
 --TEMPORIZADOR-------------------------------------------------
 U_TIMER: entity work.temporizador
     generic map(
-      N => 6  
+      N => N_TIMER  
     )
     port map(
       clk   => clk,
-      hab   => '1',
+      hab   => hab_timer,
       reset => not nreset,  --reset es activo en '0'
-      P     => std_logic_vector(to_unsigned(carga_timer, 6)),
+      P     => std_logic_vector(to_unsigned(carga_timer, N_TIMER)),
       Z     => timer_t_out,
       T     => open --T no se usa, queda abierta
     );
