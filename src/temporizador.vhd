@@ -15,13 +15,12 @@ entity temporizador is
         T : out std_logic);
     end temporizador;
 -------------------------------------------------------------------
---logica del temporizador (que hace el temporizador)
+--logica del temporizador 
 
 architecture arch of temporizador is
    signal D, D_sig : unsigned (5 downto 0);
 begin
 
---------------------------------------------
     --proceso detecta si hay flanco ascendente
     memoria: process(clk)
     begin
