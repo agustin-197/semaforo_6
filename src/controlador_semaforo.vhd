@@ -58,13 +58,13 @@ begin
 --TEMPORIZADOR-------------------------------------------------
 U_TIMER: entity work.temporizador
     generic map(
-      N => 6  
+      N => 8  
     )
     port map(
       clk   => clk,
       hab   => '1',
       reset => not nreset,  --reset es activo en '0'
-      P     => std_logic_vector(to_unsigned(carga_timer, 6)),
+      P     => std_logic_vector(to_unsigned(carga_timer, 8)),
       Z     => timer_t_out,
       T     => open --T no se usa, queda abierta
     );

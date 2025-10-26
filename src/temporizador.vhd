@@ -10,7 +10,7 @@ entity temporizador is
         clk : in std_logic;
         hab : in std_logic;
         reset : in std_logic;
-        P : in std_logic_vector (5 downto 0);
+        P : in std_logic_vector (N-1 downto 0);
         Z : out std_logic;
         T : out std_logic);
     end temporizador;
@@ -18,7 +18,7 @@ entity temporizador is
 --logica del temporizador 
 
 architecture arch of temporizador is
-   signal D, D_sig : unsigned (5 downto 0);
+   signal D, D_sig : unsigned (N-1 downto 0);
 begin
 
     --proceso detecta si hay flanco ascendente
