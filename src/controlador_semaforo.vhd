@@ -203,63 +203,38 @@ end process;
 ----------------------------------------------
 -- Logica de salida (luces y confirmaciones)
 -- Verde = "00", Amarillo = "01" , Rojo = "10"
+
+
+
+
 ------CONTINUAR DE AQUIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
-process(all) is
+
+--LOGICA DE SALIDA------------------------------------------------------------
+luces:process(all) is
 begin
 
-        --resetear todas las salidas a un valor seguro
-    
-    peaton_a <= '0'; --apagado
-    peaton_b <= '0'; --apagado
-    confirmacion_emergencia_a <= '0';
-    confirmacion_emergencia_b <= '0';
-    confirmacion_peaton_a <= '0';
-    confirmacion_peaton_b <= '0';
 
     case estado_actual is
     
         when VERDE_A => 
             transito_a <= "00"; --verde
             transito_b <= "10"; --rojo
-            confirmacion_peaton_a <= m_peaton_a;--confirma que esta modo peaton
-            peaton_b <= '1'; --peaton B puede cruzar
-    
+            
         when AMARILLO_A =>
             transito_a <= "01";--amarillo
             transito_b <= "10";--rojo
-            peaton_a <= '1';
-
+            
         when VERDE_B =>
             transito_b <= "00";--verde
             transito_a <= "10";--rojo
-            confirmacion_peaton_b <= m_peaton_b;--confirma que esta modo peaton
-            peaton_a <= '1';
 
         when AMARILLO_B =>
             transito_b <= "01";--amarillo
             transito_a <= "10";--rojo
-            peaton_a <= '1';
 
-        when EMERGENCIA_A_T =>
-            transito_a <= "10";--rojo
-            transito_b <= "01";--amarillo(forzado)
-
-        when EMERGENCIA_A_M =>
-            transito_a <= "00";--verde (hasta que termine emergencia)
-            transito_b <= "10";--rojo
-            confirmacion_emergencia_a <= '1'; 
-
-        when EMERGENCIA_B_T =>
-             transito_b <= "10";--rojo
-            transito_a <= "01";--amarillo(forzado)
-
-        when EMERGENCIA_B_M =>
-            transito_b <= "00";--verde (hasta que termine emergencia)
-            transito_a <= "10";--rojo
-            confirmacion_emergencia_b <= '1'; 
-
-        when others => transito_a <= "10";
-                       transito_b <= "10";    
+        when others => 
+             transito_a <= "10";
+             transito_b <= "10";    
             
     end case ;
 
