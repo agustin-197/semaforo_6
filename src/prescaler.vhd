@@ -9,7 +9,7 @@ entity prescaler is
     port(
         nreset : in std_logic; -- sincrónico
         clk    : in std_logic;
-        preload: in std_logic_vector (23 downto 0);
+        preload: in std_logic_vector (N-1 downto 0);
         tc     : out std_logic
     );
 end prescaler;

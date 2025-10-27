@@ -1,0 +1,6 @@
+-- Una línea cada 5 segundos formato <vector> <entero>
+-- vector:
+--   solicitudPeatonA&solicitudPeatonB
+--   &solicitudEmergenciaA&solicitudEmergenciaB
+-- entero: tiempo a mantener el estado, en segundos
+0000 120

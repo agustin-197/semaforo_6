@@ -1,0 +1,16 @@
+-- Una línea cada 5 segundos formato <vector> <entero>
+-- vector:
+--   transitoA & peatonA & transitoB & peatonB
+--   & confirmacionPeatonA & confirmacionPeatonB
+--   & confirmacionEmergenciaA & confirmacionEmergenciaB
+-- entero: tiempo hasta la siguiente prueba, en segundos
+-- transitoA | transitoB :
+--   ROJO     : 10
+--   AMARILLO : 11
+--   VERDE    : 01
+--   NEGRO    : 00
+0101000000 50
+1101000000 10
+1000100000 50
+1001100000 10
+0101000000 1

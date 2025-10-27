@@ -1,6 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use work.all;
 
 entity controlador_semaforo is
     generic (
@@ -40,16 +41,18 @@ VERDE_A, --calle A verde
 AMARILLO_A, -- calle a amarillo
 VERDE_B, --calle B verde
 AMARILLO_B, --calle A amarillo
-EMERGENCIA_A_T, --transicion verde A a amarillo A para dar lugar emergencia B (verde calle B) 
-EMERGENCIA_B_T, --transicion verde B a amarillo B para dar lugar emergencia A (verde calle A)
-EMERGENCIA_A_M, --mantiene A en verde
-EMERGENCIA_B_M --mantiene B en verde
+EMERGENCIA_A, --dar lugar emergencia A (verde calle A) y calle B rojo
+EMERGENCIA_B, --dar lugar emergencia B (verde calle B) y calle A rojo 
+VERDE_ADICIONAL_A, --mantiene A en verde
+VERDE_ADICIONAL_B, --mantiene B en verde
+CANCELA_A, --cancela verde A
+CANCELA_B --cancela verde B
 );
 
 signal estado_actual, estado_siguiente: estado_t;
 signal carga_timer: integer; --cuenta que se carga en el temporizador
-signal timer_t_out: std_logic; --señal generada por temporizador al final de la cuenta
-signal hab_timer : std_logic;
+signal t_out: std_logic; --señal generada por temporizador al final de la cuenta
+signal hab_timer : std_logic;--habilita el conteo
 
 --Señales para almacenar las solicitudes peatonales
 signal m_peaton_a, m_peaton_b: std_logic := '0';--guarda el pulsador peaton
@@ -82,44 +85,38 @@ U_TIMER: entity work.temporizador
       T     => open --T no se usa, queda abierta
     );
 ---------------------------------------------------------------
-
-process (clk, nreset) is
+--MEMORIAS PEATONES
+memoria_peaton_A:process (clk, nreset) is
 begin
-
---limpia memoria cuando confirma
-if nreset = '0' then
-  m_peaton_a  <= '0';
-  m_peaton_b  <= '0';
-  peaton_a_det <= '0';
-  peaton_b_det <= '0';
-
-
-elsif rising_edge(clk) then
+        if nreset ='0' then
+            m_peaton_a <= '0';
+        elsif rising_edge(clk) then
         --peaton a
-        if solicitud_peaton_a='1' and peaton_a_det='0' then
-            m_peaton_a <= '1';
+        if solicitud_peaton_a='1'then
+            m_peaton_a <= '1';            
+        elsif peaton_a_det='1' then
+            m_peaton_a <= '0';
         end if;
-        peaton_a_det <= solicitud_peaton_a;
+        end if;
+    end process;
 
         --peaton b
-        if solicitud_peaton_b='1' and peaton_b_det='0' then
-            m_peaton_b <= '1';
-        end if;
-        peaton_b_det <= solicitud_peaton_b;
-
-        --Limpia memoria de solicitud peaton cuando termina su verde
-        if estado_actual = AMARILLO_A or estado_actual = AMARILLO_B or 
-        estado_actual = EMERGENCIA_A_M or estado_actual = EMERGENCIA_B_M then
-            m_peaton_a <= '0';
+memoria_peaton_B:process (clk, nreset) is
+begin
+        if nreset ='0' then
+            m_peaton_b <= '0';
+        elsif rising_edge(clk) then
+        --peaton a
+        if solicitud_peaton_b='1'then
+            m_peaton_b <= '1';            
+        elsif peaton_b_det='1' then
             m_peaton_b <= '0';
         end if;
-           
-    end if ;
+        end if;
+    end process;
 
-end process;
-
--- Logica de cambio de estado---------------------------------
-process (clk, nreset) is
+-- Registro---------------------------------
+memoria:process (clk, nreset) is
     begin
         if nreset = '0' then
         estado_actual <= VERDE_A; --establezco inicio en verde direccion A
@@ -131,119 +128,88 @@ process (clk, nreset) is
 --PRIORIDADES: 1° emergencia, 2°peaton, 3° transicion normal (autos)
 
 --proceso para determinar el estado siguiente y el tiempo de cuenta
-process(estado_actual, timer_t_out, solicitud_emergencia_a, solicitud_emergencia_b, m_peaton_a, m_peaton_b) is
+Logica_estado_sig:process(all) is
 begin
     estado_siguiente <= estado_actual; --se queda en el mismo estado
-    carga_timer <= T_VERDE; --Asigno tiempo verde
-
     case estado_actual is
     
-        --ESTADOS NORMALES Y PEATONALES (CALLE A)
+        --ESTADOS(CALLE A)
         when VERDE_A => 
-            --si hay emergencia en b y no hay solicitud peaton a, transicion inmediata
-            if solicitud_emergencia_b = '1' and m_peaton_a ='0' then
-                estado_siguiente <= EMERGENCIA_A_T; --transiciona a B
-            elsif timer_t_out='1' then
+            if solicitud_emergencia_a and t_out then
+                estado_siguiente <= EMERGENCIA_A;
+                elsif solicitud_emergencia_b and not m_peaton_a and not solicitud_emergencia_a then
+                estado_siguiente <= CANCELA_A;
+                elsif m_peaton_a and t_out then
+                estado_siguiente <= VERDE_ADICIONAL_A    ;
+                elsif not m_peaton_a and not solicitud_emergencia_a and t_out then
+                estado_siguiente <= AMARILLO_A;                        
+            end if;
+            
+        when VERDE_ADICIONAL_A =>
+            if t_out then
                 estado_siguiente <= AMARILLO_A;
-                carga_timer <= T_AMARILLO;
-            else
-            --si se pide peaton a, mantener verde
-                if m_peaton_a = '1' then
-                    carga_timer <= T_PEATON;
-                else
-                carga_timer <= T_VERDE;
-                end if;
+                
+            end if ;
+        when AMARILLO_A =>
+            if t_out then
+                estado_siguiente <= VERDE_B;
+            end if ;
+      
+        when CANCELA_A => --calle A esta verde, se le fuerza amarillo
+            estado_siguiente <= AMARILLO_A;
+
+        when EMERGENCIA_A => --calle A en verde por emergencia (bloquea B)
+            if not solicitud_emergencia_a then
+                estado_siguiente <= AMARILLO_A;
+                
+            end if ;
+
+
+        --ESTADOS (CALLE B)
+        when VERDE_B =>
+           if solicitud_emergencia_b and t_out then
+                estado_siguiente <= EMERGENCIA_B;
+                elsif solicitud_emergencia_a and not m_peaton_b and not solicitud_emergencia_b then
+                estado_siguiente <= CANCELA_B;
+                elsif m_peaton_b and t_out then
+                estado_siguiente <= VERDE_ADICIONAL_B    ;
+                elsif not m_peaton_b and not solicitud_emergencia_b and t_out then
+                estado_siguiente <= AMARILLO_B;                        
             end if;
 
-        when AMARILLO_A =>
-            carga_timer <= T_AMARILLO;
-            if timer_t_out = '1' then
-                
-            --si hay emergencia b inactiva no confirmada, ir a estado de transicion (pasa al estado Verde B)
-            if solicitud_emergencia_b ='1' then
-                estado_siguiente <= EMERGENCIA_B_M;
-                carga_timer <= 0;
-                
-                else
-                    estado_siguiente <= VERDE_B;
-                    carga_timer <= T_VERDE;
-                end if;
-            end if ; 
-        
-        --ESTADOS NORMALES Y PEATONALES (CALLE B)
-        when VERDE_B =>
-            --si hay emergencia en a sin solicitud peaton b, hay trancision 
-            if solicitud_emergencia_a = '1' and m_peaton_b ='0' then
-                estado_siguiente <= EMERGENCIA_B_T;
-                carga_timer <= T_AMARILLO;
-            elsif timer_t_out = '1' then
+        when VERDE_ADICIONAL_B =>
+            if t_out then
                 estado_siguiente <= AMARILLO_B;
-                carga_timer <= T_AMARILLO;
-            else
-                --si se pide peaton b, mantiene verde
-                if m_peaton_b = '1' then
-                    carga_timer <= T_PEATON;
-                else
-                    carga_timer <= T_VERDE;
-                end if ;
-                                
+                
             end if ;
-        
         when AMARILLO_B =>
-            carga_timer <= T_AMARILLO;
-            if timer_t_out = '1' then
-                --si hay solicitud de emergencia a, inactiva no confirmada, ir a estado de transicion (pasa al estado verde A)
-                if solicitud_emergencia_a = '1' then
-                    estado_siguiente <= EMERGENCIA_A_M;
-                    carga_timer <= 0;
-                    else
-                        estado_siguiente <= VERDE_A;
-                        carga_timer <= T_VERDE;
-                                        
-                end if ;    
+            if t_out then
+                estado_siguiente <= VERDE_A;
             end if ;
     
-        --FASES de EMERGENCIA
-        when EMERGENCIA_B_T => --calle B esta verde, se le fuerza amarillo
-            carga_timer <= T_AMARILLO;
-            if timer_t_out = '1' then
-                estado_siguiente <= EMERGENCIA_A_M;
-                carga_timer <= 0; --mantiene hasta q la emergencia se desactive
+    
+        when CANCELA_B => --calle B esta verde, se le fuerza amarillo
+            estado_siguiente <= AMARILLO_B;
+       
+        when EMERGENCIA_B => --Calle B en verde por emergencia (Bloquea A)
+            if not solicitud_emergencia_b then
+                estado_siguiente <= AMARILLO_B;
                 
             end if ;
-        when EMERGENCIA_A_M => --calle A en verde por emergencia (bloquea B)
-            carga_timer <= 0;
-            if solicitud_emergencia_a = '0' then
-                estado_siguiente <= AMARILLO_A;
-                carga_timer <= T_AMARILLO;
-            end if ;
 
-        when EMERGENCIA_A_T => --calle A esta verde, se le fuerza amarillo
-            carga_timer <= T_AMARILLO;
-            if timer_t_out = '1' then
-                estado_siguiente <= EMERGENCIA_B_M;
-                carga_timer <= 0;                
-            end if ;
-        
-        when EMERGENCIA_B_M => --Calle B en verde por emergencia (Bloquea A)
-            carga_timer <= 0;
-            if solicitud_emergencia_b = '0' then
-                estado_siguiente <= AMARILLO_B;
-                carga_timer <= T_AMARILLO;
-            end if ;      
+        when others => estado_siguiente <= VERDE_A;
     end case ;
 end process;
 ----------------------------------------------
 -- Logica de salida (luces y confirmaciones)
 -- Verde = "00", Amarillo = "01" , Rojo = "10"
-
-process(estado_actual, solicitud_emergencia_a, solicitud_emergencia_b, m_peaton_a, m_peaton_b) is
+------CONTINUAR DE AQUIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+process(all) is
 begin
 
         --resetear todas las salidas a un valor seguro
-    transito_a <= "10"; --rojo
+    
     peaton_a <= '0'; --apagado
-    transito_b <="10";--rojo
     peaton_b <= '0'; --apagado
     confirmacion_emergencia_a <= '0';
     confirmacion_emergencia_b <= '0';
@@ -291,7 +257,12 @@ begin
             transito_b <= "00";--verde (hasta que termine emergencia)
             transito_a <= "10";--rojo
             confirmacion_emergencia_b <= '1'; 
+
+        when others => transito_a <= "10";
+                       transito_b <= "10";    
+            
     end case ;
+
 end process;
 
 end arch ;
