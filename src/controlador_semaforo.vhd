@@ -235,9 +235,7 @@ begin
              transito_b <= "10";--rojo 
              peaton_a ='0';
              peaton_b ='0';   
-        
-        
-            
+                    
     end case ;
 
 end process;
