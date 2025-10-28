@@ -50,7 +50,7 @@ CANCELA_B --cancela verde B
 );
 
 signal estado_actual, estado_siguiente: estado_t;
-signal carga_timer: integer; --cuenta que se carga en el temporizador
+signal carga_timer: integer:=0; --cuenta que se carga en el temporizador
 signal t_out: std_logic; --señal generada por temporizador al final de la cuenta
 signal hab_timer : std_logic;--habilita el conteo
 
@@ -60,7 +60,7 @@ signal peaton_a_det, peaton_b_det: std_logic := '0'; --detecta el pulsador peato
 begin
 
 --PRESCALER----------------------------------------------------
-U_PRESCALER: entity work.prescaler
+PRESCALER: entity work.prescaler
     generic map (
         N => N_PRE
     )
@@ -72,7 +72,7 @@ U_PRESCALER: entity work.prescaler
     );
 
 --TEMPORIZADOR-------------------------------------------------
-U_TIMER: entity work.temporizador
+TIMER: entity work.temporizador
     generic map(
       N => N_TIMER  
     )
@@ -81,7 +81,7 @@ U_TIMER: entity work.temporizador
       hab   => hab_timer,
       reset => not nreset,  --reset es activo en '0'
       P     => std_logic_vector(to_unsigned(carga_timer, N_TIMER)),
-      Z     => timer_t_out,
+      Z     => t_out,
       T     => open --T no se usa, queda abierta
     );
 ---------------------------------------------------------------
@@ -202,40 +202,52 @@ begin
 end process;
 ----------------------------------------------
 -- Logica de salida (luces)
--- Verde = "00", Amarillo = "01" , Rojo = "10",
+-- Verde = "01", Amarillo = "11" , Rojo = "10",
 
 --LOGICA DE SALIDA------------------------------------------------------------
 luces:process(all) is
 begin
+        --  Valores por defecto
+            peaton_a <='0';
+            peaton_b <='0'; 
+            hab_timer <= '0';
+            carga_timer <= 0;
 
     case estado_actual is
-    
+
         when VERDE_A => 
-            transito_a <= "00"; --verde
+            transito_a <= "01"; --verde
             transito_b <= "10"; --rojo
             peaton_a <='1'; --verde peaton A
             peaton_b <='0'; --espera peaton B
+            hab_timer <= '1';
+            carga_timer <= T_VERDE;
             
+
         when AMARILLO_A =>
-            transito_a <= "01";--amarillo
+            transito_a <= "11";--amarillo
             transito_b <= "10";--rojo
-            
+            carga_timer <= T_AMARILLO;
+            hab_timer <= '1';
+
         when VERDE_B =>
-            transito_b <= "00";--verde
+            transito_b <= "01";--verde
             transito_a <= "10";--rojo
             peaton_b <='1'; --verde peaton B
             peaton_a <='0'; --espera peaton A
+            carga_timer <= T_VERDE;
+            hab_timer <= '1';
 
         when AMARILLO_B =>
-            transito_b <= "01";--amarillo
+            transito_b <= "11";--amarillo
             transito_a <= "10";--rojo
+            carga_timer <= T_AMARILLO;
+            hab_timer <= '1';
 
         when others => 
-             transito_a <= "10";--rojo
-             transito_b <= "10";--rojo 
-             peaton_a ='0';
-             peaton_b ='0';   
-                    
+             transito_a <= "00"; --apagados
+             transito_b <= "00"; 
+                           
     end case ;
 
 end process;

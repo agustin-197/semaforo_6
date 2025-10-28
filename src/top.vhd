@@ -62,6 +62,7 @@ begin
         T_VERDE    => T_VERDE,
         T_AMARILLO => T_AMARILLO,
         T_PEATON   => T_PEATON
+        
     ) port map (
         clk => clk,
         nreset => nreset,
