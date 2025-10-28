@@ -201,24 +201,20 @@ begin
     end case ;
 end process;
 ----------------------------------------------
--- Logica de salida (luces y confirmaciones)
--- Verde = "00", Amarillo = "01" , Rojo = "10"
-
-
-
-
-------CONTINUAR DE AQUIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+-- Logica de salida (luces)
+-- Verde = "00", Amarillo = "01" , Rojo = "10",
 
 --LOGICA DE SALIDA------------------------------------------------------------
 luces:process(all) is
 begin
-
 
     case estado_actual is
     
         when VERDE_A => 
             transito_a <= "00"; --verde
             transito_b <= "10"; --rojo
+            peaton_a <='1'; --verde peaton A
+            peaton_b <='0'; --espera peaton B
             
         when AMARILLO_A =>
             transito_a <= "01";--amarillo
@@ -227,14 +223,20 @@ begin
         when VERDE_B =>
             transito_b <= "00";--verde
             transito_a <= "10";--rojo
+            peaton_b <='1'; --verde peaton B
+            peaton_a <='0'; --espera peaton A
 
         when AMARILLO_B =>
             transito_b <= "01";--amarillo
             transito_a <= "10";--rojo
 
         when others => 
-             transito_a <= "10";
-             transito_b <= "10";    
+             transito_a <= "10";--rojo
+             transito_b <= "10";--rojo 
+             peaton_a ='0';
+             peaton_b ='0';   
+        
+        
             
     end case ;
 
