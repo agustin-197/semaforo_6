@@ -14,31 +14,31 @@ state VERDE_A
 state AMARILLO_A
 state VERDE_B
 state AMARILLO_B
-state EMERGENCIA_A_T
-state EMERGENCIA_B_T
-state EMERGENCIA_A_M
-state EMERGENCIA_B_M
+state EMERGENCIA_A
+state EMERGENCIA_B
+state VERDE_ADICIONAL_A
+state VERDE_ADICIONAL_B
+state CANCELA_A 
+state CANCELA_B
 
 ' -------- Región A --------
-VERDE_A --> EMERGENCIA_A_T : solicitud_emergencia_b='1' && m_peaton_a='0'
-VERDE_A --> AMARILLO_A     : timer_t_out='1'
-VERDE_A --> VERDE_A        : m_peaton_a='1' / T := T_PEATON
+VERDE_A --> EMERGENCIA_A : (solicitud_emergencia_a) and (t_out)
+VERDE_A --> AMARILLO_A     : (timer_t_out) and (not solicitud_peaton_a) and (not solicitud_emergencia_a)
+VERDE_A --> CANCELA_A      : (solicitud_emergencia_b) and (not solicitud_peaton_a) and (not solicitud_emergencia_a)
+VERDE_A --> VERDE_ADICIONAL_A: (solicitud_peaton_a) and (t_out)
 
-AMARILLO_A --> EMERGENCIA_B_M : timer_t_out='1' && solicitud_emergencia_b='1'
-AMARILLO_A --> VERDE_B        : timer_t_out='1' && solicitud_emergencia_b='0'
+AMARILLO_A --> VERDE_B     : t_out
 
-EMERGENCIA_A_T --> EMERGENCIA_B_M : timer_t_out='1'
-EMERGENCIA_A_M --> AMARILLO_A     : solicitud_emergencia_a='0'
+EMERGENCIA_A --> AMARILLO_A : not solicitud_emergencia_a
 
 ' -------- Región B --------
-VERDE_B --> EMERGENCIA_B_T : solicitud_emergencia_a='1' && m_peaton_b='0'
-VERDE_B --> AMARILLO_B     : timer_t_out='1'
-VERDE_B --> VERDE_B        : m_peaton_b='1' / T := T_PEATON
+VERDE_B --> EMERGENCIA_B : (solicitud_emergencia_b) and (t_out)
+VERDE_B --> AMARILLO_B     : (timer_t_out) and (not solicitud_peaton_b) and (not solicitud_emergencia_b)
+VERDE_B --> CANCELA_B      : (solicitud_emergencia_a) and (not solicitud_peaton_b) and (not solicitud_emergencia_b)
+VERDE_B --> VERDE_ADICIONAL_B: (solicitud_peaton_b) and (t_out)
 
-AMARILLO_B --> EMERGENCIA_A_M : timer_t_out='1' && solicitud_emergencia_a='1'
-AMARILLO_B --> VERDE_A        : timer_t_out='1' && solicitud_emergencia_a='0'
+AMARILLO_B --> VERDE_A     : t_out
 
-EMERGENCIA_B_T --> EMERGENCIA_A_M : timer_t_out='1'
-EMERGENCIA_B_M --> AMARILLO_B     : solicitud_emergencia_b='0'
+EMERGENCIA_B --> AMARILLO_B : not solicitud_emergencia_b
 
 @enduml
